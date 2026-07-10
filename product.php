@@ -1,7 +1,6 @@
 <?php
-error_reporting(0);
-include('db_connection.php');
-
+require_once("error_handler.php");
+require_once('db_connection.php');
 $last_viewed = isset($_COOKIE['last_viewed_product']) ? htmlspecialchars($_COOKIE['last_viewed_product']) : null;
 $query = "SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.category_id";
 $result = mysqli_query($conn, $query);
@@ -10,6 +9,21 @@ if (!$result) {
     echo "<div style='max-width:500px; margin:10% auto; text-align:center; font-family:sans-serif;'><h2>System connection issue.</h2>
     <p>Please refresh or try again later.</p></div>";
     exit();
+}
+
+if (isset($_GET['view'])) {
+    $id = intval($_GET['view']);
+
+    $stmt = mysqli_prepare($conn, "SELECT name FROM products WHERE product_id=?");
+    mysqli_stmt_bind_param($stmt,"i",$id);
+    mysqli_stmt_execute($stmt);
+    
+    $result = mysqli_stmt_get_result($stmt);
+    if($row = mysqli_fetch_assoc($result))
+    {
+        setcookie("last_viewed_product", $row['name'], time()+86400, "/");
+        $_COOKIE['last_viewed_product']=$row['name'];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -36,8 +50,9 @@ if (!$result) {
                 </thead>
                 <tbody>
                     <?php while($row = mysqli_fetch_assoc($result)): ?>
-                        <tr onclick="document.cookie='last_viewed_product=<?php echo urlencode($row['name']); ?>; max-age=86400; path=/';">
-                            <td>#<?php echo $row['product_id']; ?></td>
+                        <tr>
+                            <td><a href="product.php?view=<?php echo $row['product_id']; ?>">
+                                <?php echo htmlspecialchars($row['name']); ?></a></td>
                             <td><strong><?php echo htmlspecialchars($row['name']); ?></strong></td>
                             <td><?php echo htmlspecialchars($row['category_name']); ?></td>
                             <td>TSh <?php echo number_format($row['price'], 2); ?></td>

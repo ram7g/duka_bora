@@ -1,6 +1,6 @@
 <?php
-error_reporting(0);
-include('db_connection.php');
+require_once("error_handler.php");
+require_once('db_connection.php');
 $id = intval($_GET['id']);
 $msg = "";
 
@@ -10,18 +10,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $price = floatval($_POST['price']);
     $qty = intval($_POST['stock_qty']);
     
-    if (!empty($name) && $price > 0 && $qty >= 0) {
-        $stmt = mysqli_prepare($conn, "UPDATE products SET name = ?, price = ?, stock_qty = ?
-         WHERE product_id = ?");
-        mysqli_stmt_bind_param($stmt, "sdii", $name, $price, $qty, $id);
-        if (mysqli_stmt_execute($stmt)) { header("Location: product.php"); exit(); }
-        else { $msg = "Failed to update record."; }
-    } else { $msg = "Invalid data entries."; }
+    if (trim($name) == "" ||!is_numeric($_POST['price']) ||!is_numeric($_POST['stock_qty']) ||$price <= 0 ||$qty < 0)
+{
+    $msg = "Please enter valid values.";
+}
+else {
+    try {
+    $stmt = mysqli_prepare($conn, "UPDATE products SET name = ?, price = ?, stock_qty = ? WHERE product_id = ?");
+    mysqli_stmt_bind_param($stmt, "sdii", $name, $price, $qty, $id);
+    mysqli_stmt_execute($stmt);
+    header("Location: product.php");
+    exit();
+        }
+    catch (Exception $e) 
+    {
+    $msg = "Unable to update the product. Please try again.";
+    } 
+     }
 }
 
 $stmt = mysqli_prepare($conn, "SELECT * FROM products WHERE product_id = ?");
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
+
 $p_data = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 if (!$p_data) { header("Location: product.php"); exit(); }
 ?>

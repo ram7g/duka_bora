@@ -1,24 +1,28 @@
 <?php
-error_reporting(0);
-include('db_connection.php');
+require_once("error_handler.php");
+require_once('db_connection.php');
 
 $id = isset($_POST['id']) ? intval($_POST['id']) : intval($_GET['id'] ?? 0);
 
 // Only perform the actual delete on a POST request (i.e. after the user
 // confirms on this page). A plain GET link/click just shows the confirmation
 // below, so nobody can delete a product by accident or via a stray link.
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST"){
     if ($id > 0) {
-        $del_sales = mysqli_prepare($conn, "DELETE FROM sales WHERE product_id = ?");
-        mysqli_stmt_bind_param($del_sales, "i", $id);
-        mysqli_stmt_execute($del_sales);
+        try {
+    $del_sales = mysqli_prepare($conn, "DELETE FROM sales WHERE product_id = ?");
+    mysqli_stmt_bind_param($del_sales, "i", $id);
+    mysqli_stmt_execute($del_sales);
 
-        $del_product = mysqli_prepare($conn, "DELETE FROM products WHERE product_id = ?");
-        mysqli_stmt_bind_param($del_product, "i", $id);
-        mysqli_stmt_execute($del_product);
-    }
+    $del_product = mysqli_prepare($conn, "DELETE FROM products WHERE product_id = ?");
+    mysqli_stmt_bind_param($del_product, "i", $id);
+    mysqli_stmt_execute($del_product);
     header("Location: product.php");
     exit();
+            }
+    catch (Exception $e) 
+    {$msg = "Unable to delete the product. Please try again.";}
+}
 }
 
 $stmt = mysqli_prepare($conn, "SELECT name FROM products WHERE product_id = ?");

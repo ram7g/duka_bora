@@ -1,6 +1,6 @@
 <?php
-error_reporting(0);
-include('db_connection.php');
+require_once("error_handler.php");
+require_once('db_connection.php');   
 $res = mysqli_query($conn, "SELECT s.sale_id, p.name, s.qty_sold, s.sale_date, s.total_price FROM sales s JOIN products p ON s.product_id = p.product_id ORDER BY s.sale_date DESC");
 ?>
 <!DOCTYPE html>
